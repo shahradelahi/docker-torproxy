@@ -1,0 +1,11 @@
+#!/bin/bash
+
+TOR_TUNNEL_PORT="$(get-tunnel-port)"
+
+# kill previous gost session
+if screen -list | grep -q gost; then
+  screen -S gost -X quit
+fi
+
+screen -L -Logfile /var/log/gogost/gost.log -dmS gost \
+  bash -c "gost -F http://localhost:${TOR_TUNNEL_PORT} ${*}"

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+TOR_PORT="$(get-tunnel-port)"
+curl \
+  -s -o /dev/null \
+  -w "%{http_code}" \
+  -x "http://localhost:${TOR_PORT}/" \
+  https://www.cloudflare.com/cdn-cgi/trace/ | grep -q "200" && echo "OK" || echo "FAIL"
