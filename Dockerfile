@@ -11,6 +11,7 @@ RUN apk update \
     bash \
     screen \
     curl \
+    nyx \
     tor \
     && rm -rf /var/cache/apk/*
 
@@ -61,13 +62,6 @@ CMD ["-L", "http://:8080", "-L", "socks5://:1080"]
 #   docker run --rm -p 9090:8080 -e TOR_USE_BRIDGE=1 -v "$(pwd)/config/bridges.conf:/etc/torrc.d/bridges.conf" litehex/torproxy
 
 # Test
-#   curl -x http://localhost:8118 ip.me
-#   curl -x http://localhost:8080 https://check.torproject.org/api/ip
-#   curl -x http://localhost:9090 https://check.torproject.org/api/ip
-#   curl -x socks5://localhost:9050 http://whatismyipaddress.com/
-#   curl https://check.torproject.org/api/ip
-
-# Test in Container
 #   curl -x socks5://localhost:1080 https://ip.me
 #   curl -x http://localhost:8080 https://ip.me
 #   curl --proxy socks5://username:password@localhost:1080 https://ip.me
@@ -77,5 +71,4 @@ CMD ["-L", "http://:8080", "-L", "socks5://:1080"]
 #   docker run --rm -v torproxy:/home/torproxy litehex/torproxy
 #   docker run --rm -v torproxy:/home/torproxy -e TOR_SOCKS5_PROXY=host.docker.internal:8080 litehex/torproxy
 #   docker run --rm -v torproxy:/home/torproxy -v "$(pwd)/config/torrc:/etc/tor/torrc" litehex/torproxy
-#   docker run --rm -v torproxy:/home/torproxy -e TOR_EXIT_NODES=us litehex/torproxy
 #   docker run --rm -v torproxy:/home/torproxy litehex/torproxy -L socks5://username:password@:1080

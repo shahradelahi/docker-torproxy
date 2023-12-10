@@ -128,14 +128,14 @@ ${TOR_BRIDGE_RELAY:+BridgeRelay $TOR_BRIDGE_RELAY}
 #BridgeDistribution none
 ${TOR_BRIDGE_DISTRIBUTION:+BridgeDistribution $TOR_BRIDGE_DISTRIBUTION}
 
+############### Other options ###############
+
+%include /etc/torrc.d/*.conf
+
 ########## END AUTO-GENERATED FILE ##########
 EOF
 
   env_to_config
-
-  if [ -d "/etc/torrc.d" ]; then
-    echo "%include /etc/torrc.d/*.conf" >>"${TOR_CONFIG}"
-  fi
 
   # Remove comment line with single Hash
   sed -i '/^#\([^#]\)/d' "${TOR_CONFIG}"
@@ -147,10 +147,20 @@ EOF
   sed -i '/^$/N;/^\n$/D' "${TOR_CONFIG}"
 }
 
+CUSTOM_TOR_OPTIONS=(
+  "TOR_CONTROL_PASSWD"
+)
+
 # gets any environment variables that start with TOR_ and adds them to the config file
 env_to_config() {
   local added_count=0
   for _env_name in $(env | grep -o "^TOR_[^=]*"); do
+
+    # skip custom options
+    if [[ " ${CUSTOM_TOR_OPTIONS[*]} " == *" ${_env_name} "* ]]; then
+      continue
+    fi
+
     local env_value="${!_env_name}"
 
     # remove prefix and convert to camel case
@@ -161,7 +171,7 @@ env_to_config() {
       if grep -q "^${option}" "${TOR_CONFIG}"; then
         sed -i "s/^${option}.*/${option} ${env_value}/" "${TOR_CONFIG}"
       else
-        echo "${option} ${env_value}" >>"${TOR_CONFIG}"
+        sed -i "s/^############### Other options ###############$/&\n\n${option} ${env_value}/" "${TOR_CONFIG}"
         added_count=$((added_count + 1))
       fi
     fi
@@ -174,6 +184,12 @@ env_to_config() {
     echo "Added ${added_count} options from environment variables"
   fi
 }
+
+# If command starts with nyx, run nyx
+if [ "${1}" = 'nyx' ]; then
+  shift
+  exec nyx "$@"
+fi
 
 # Create torrc file if it doesn't exist
 if [ ! -f "${TOR_CONFIG}" ]; then
@@ -188,6 +204,7 @@ echo -e "Alpine: \c" && cat /etc/alpine-release
 echo -e "Tor: \c" && tor --version | head -n 1 | awk '{print $3}' | sed 's/.$//'
 echo -e "Obfs4proxy: \c" && obfs4proxy -version
 echo -e "Gost: \c" && gost -V
+echo -e "Nyx: \c" && nyx --version | head -n 1 | awk '{print $3}'
 echo -e "\n======================= Tor Config ======================="
 cat "${TOR_CONFIG}" | grep -v "^#" | grep -v "^$"
 echo -e "============================================================\n"

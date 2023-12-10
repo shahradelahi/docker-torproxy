@@ -1,6 +1,6 @@
 # TorProxy
 
-Just a latest version of Tor and extra tools to run it as a proxy server.
+A latest version of Tor for with tools for creating a proxy server.
 
 ## Usage
 
@@ -8,10 +8,8 @@ By default, a `Socks5` and `HTTP` proxy server with no authentication will be cr
 respectively.
 
 ```bash
-docker run --rm \
-  -p 1080:1080 \
-  -p 8080:8080 \
-  litehex/torproxy:latest
+docker run --rm -p 1080:1080 -p 8080:8080 \
+  litehex/torproxy
 ```
 
 Testing the proxy server.
@@ -31,39 +29,46 @@ curl -x http://localhost:8080 https://check.torproject.org/api/ip
 ```bash
 docker run --rm \
   -p 1080:1080 \
-  litehex/torproxy:latest -L "socks5://<username>:<password>@:1080"
+  litehex/torproxy -L "socks5://<username>:<password>@:1080"
 ```
 
-##### Configure Tor to use a specific exit node
+##### Configure Tor to use exit nodes in specified countries
 
 ```bash
 docker run --rm \
   -p 1080:1080 \
-  -e TOR_EXIT_NODE=ru \
-  litehex/torproxy:latest
+  -e TOR_EXIT_NODES="{us},{ca},{gb}" \
+  -e TOR_STRICT_NODES="1" \
+  litehex/torproxy
 ```
 
 ##### Accessing the Tor control port
 
-By default, the control port is not exposed and for security reasons,
-it can be enabled by setting the `TOR_CONTROL_PORT` and `TOR_CONTROL_PASSWD` environment variables.
+By default, the control port is not exposed and for security reasons, it can be enabled by setting
+the `TOR_CONTROL_PORT` and `TOR_HASHED_CONTROL_PASSWORD` environment variables.
 
-First, you need to set a password for the control port.
+The container provides a feature for automatically generating a hashed password for the control port, by setting
+the `TOR_CONTROL_PASSWD` environment variable.
 
 ```bash
-docker run --rm \
-  -p 9051:9051 \
-  -e TOR_CONTROL_PORT=9051 \
+docker run --rm --name torproxy \
+  -p 9060:9060 \
+  -e TOR_CONTROL_PORT=9060 \
   -e TOR_CONTROL_PASSWD="super-secure-password" \
-  litehex/torproxy:latest
+  litehex/torproxy
 ```
 
-Now tor control port is available on port `9051`
-and you can use tools such as [nyx](https://nyx.torproject.org/) to monitor the tor instance.
+Now tor control port is available on port `9060` and you can use tools such as [nyx](https://nyx.torproject.org/) to
+monitor the tor instance.
 
 ```bash
-nyx -i 127.0.0.1:9051
+docker exec -it torproxy nyx -i 9060
 ```
+
+## Reporting
+
+If you have any questions, bug reports, and feature requests, please create an issue
+on [GitHub](https://github.com/shahradelahi/docker-torproxy/issues).
 
 ### License
 
