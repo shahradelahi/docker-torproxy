@@ -1,9 +1,8 @@
 name: Release Docker Image
 
 on:
-  create:
-    tags:
-      - v*
+  release:
+    types: [published]
 
 jobs:
   push:
@@ -31,6 +30,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: docker.io/${{ env.IMAGE_NAME }}:${{ github.ref }}
 
       - name: Add latest tag
