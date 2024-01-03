@@ -1,16 +1,60 @@
 name: Release Docker Image
 
 on:
-  release:
-    types: [ published ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag for the release'
+        required: true
+      latest:
+        description: 'Whether to tag the release as latest'
+        required: false
+        default: false
+
+env:
+  BUILD_PLATFORMS: linux/amd64,linux/arm,linux/arm64,linux/ppc64le,linux/s390
+  IMAGE_TAG: ${{ github.event.inputs.tag }}
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  push:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
+  ghcr-build:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: shahradelahi/torproxy
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.PRIVATE_TOKEN }}
+
+      - name: Push to GitHub Container Registry
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: ${{ env.BUILD_PLATFORMS }}
+          tags: ghcr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+      - if: ${{ github.event.inputs.latest == 'true' }}
+        name: Push latest tag to GitHub Container Registry
+        run: |
+          docker pull ghcr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          docker tag ghcr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ghcr.io/${{ env.IMAGE_NAME }}:latest
+          docker push ghcr.io/${{ env.IMAGE_NAME }}:latest
+
+  docker:
+    runs-on: ubuntu-latest
     env:
       IMAGE_NAME: litehex/torproxy
 
@@ -31,11 +75,12 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          platforms: linux/amd64,linux/arm64
-          tags: docker.io/${{ env.IMAGE_NAME }}:${{ github.ref }}
+          platforms: ${{ env.BUILD_PLATFORMS }}
+          tags: docker.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
-      - name: Add latest tag
-        if: startsWith(github.ref, 'refs/tags/v')
+      - if: ${{ github.event.inputs.latest == 'true' }}
+        name: Push latest tag to Docker Registry
         run: |
-          docker tag ${IMAGE_NAME}:${{ github.ref }} ${IMAGE_NAME}:latest
-          docker push ${IMAGE_NAME}:latest
+          docker pull docker.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          docker tag docker.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} docker.io/${{ env.IMAGE_NAME }}:latest
+          docker push docker.io/${{ env.IMAGE_NAME }}:latest    
