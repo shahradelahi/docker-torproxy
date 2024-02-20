@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-TOR_PORT="$(get-tunnel-port)"
+TOR_PORT="$(get-socks-port)"
 curl \
-  -s -o /dev/null \
-  -w "%{http_code}" \
-  -x "http://localhost:${TOR_PORT}/" \
-  https://www.cloudflare.com/cdn-cgi/trace/ | grep -q "200" && echo "OK" || echo "FAIL"
+  -s \
+  -x "socks5://127.0.0.1:${TOR_PORT}/" \
+  https://check.torproject.org/api/ip | grep -q 'true' && echo "OK" || echo "FAIL"

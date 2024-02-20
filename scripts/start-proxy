@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TOR_TUNNEL_PORT="$(get-tunnel-port)"
+TOR_SOCKS_PORT="$(get-socks-port)"
 
 # kill previous gost session
 if screen -list | grep -q gost; then
@@ -8,4 +8,4 @@ if screen -list | grep -q gost; then
 fi
 
 screen -L -Logfile /var/log/gogost/gost.log -dmS gost \
-  bash -c "gost -F http://localhost:${TOR_TUNNEL_PORT} ${*}"
+  bash -c "gost -F socks5://127.0.0.1:${TOR_SOCKS_PORT} ${*}"

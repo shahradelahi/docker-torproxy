@@ -154,6 +154,7 @@ CUSTOM_TOR_OPTIONS=(
 # gets any environment variables that start with TOR_ and adds them to the config file
 env_to_config() {
   local added_count=0
+  local updated_count=0
   for _env_name in $(env | grep -o "^TOR_[^=]*"); do
 
     # skip custom options
@@ -165,23 +166,26 @@ env_to_config() {
 
     # remove prefix and convert to camel case
     local option=$(to_camel_case "${_env_name#TOR_}")
-
-    # if the variable is not empty
     if [ -n "${env_value}" ]; then
-      if grep -q "^${option}" "${TOR_CONFIG}"; then
+
+      # Check if there is a corresponding option in the torrc file, and update it
+      if grep -i -q "^${option}" "${TOR_CONFIG}"; then
         sed -i "s/^${option}.*/${option} ${env_value}/" "${TOR_CONFIG}"
+        updated_count=$((updated_count + 1))
       else
         sed -i "s/^############### Other options ###############$/&\n\n${option} ${env_value}/" "${TOR_CONFIG}"
         added_count=$((added_count + 1))
       fi
+
     fi
   done
 
-  if [ "${added_count}" -gt 0 ]; then
-    # Add a blank line at the end of the file
-    echo "" >>"${TOR_CONFIG}"
+  # Add a blank line at the end of the file
+  echo "" >>"${TOR_CONFIG}"
+
+  if [ "${added_count}" -gt 0 ] || [ "${updated_count}" -gt 0 ]; then
     echo ""
-    echo "Added ${added_count} options from environment variables"
+    log INFO "Added ${added_count} and updated ${updated_count} options from environment variables."
   fi
 }
 
@@ -195,7 +199,7 @@ fi
 if [ ! -f "${TOR_CONFIG}" ]; then
   generate_tor_config
 else
-  echo "Using existing tor config file at ${TOR_CONFIG}"
+  log INFO "Using existing tor config file at ${TOR_CONFIG}"
 fi
 
 sleep 1
@@ -206,7 +210,8 @@ echo -e "Obfs4proxy: \c" && obfs4proxy -version
 echo -e "Gost: \c" && gost -V
 echo -e "Nyx: \c" && nyx --version | head -n 1 | awk '{print $3}'
 echo -e "\n======================= Tor Config ======================="
-cat "${TOR_CONFIG}" | grep -v "^#" | grep -v "^$"
+#cat "${TOR_CONFIG}" | grep -v "^#" | grep -v "^$"
+grep -v "^#" "${TOR_CONFIG}" | grep -v "^$"
 echo -e "============================================================\n"
 sleep 1
 

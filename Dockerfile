@@ -1,25 +1,46 @@
-FROM alpine:3.18
-LABEL MAINTAINER="Shahrad Elahi <shahrad@litehex.com> (https://github.com/shahradelahi)"
+ARG ALPINE_VERSION=3.19
+ARG GOST_VERSION=3.0.0-rc10
+
+ARG BUILDPLATFORM=linux/amd64
+
+
+FROM --platform=${BUILDPLATFORM} alpine:${ALPINE_VERSION} AS alpine
+FROM --platform=${BUILDPLATFORM} chriswayg/tor-alpine:latest AS tor
+FROM --platform=${BUILDPLATFORM} gogost/gost:${GOST_VERSION} AS gost
+
+
+FROM alpine AS base
 
 ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# Install obfs4proxy for Bridges
+COPY --from=tor /usr/local/bin/obfs4proxy /usr/local/bin/obfs4proxy
+
+# Install gogost
+COPY --from=gost /bin/gost /usr/local/bin/gost
+
 # Update and upgrade packages
-RUN apk update \
-    && apk upgrade \
-    && apk add --no-cache \
+RUN apk update &&\
+  apk upgrade &&\
+  # Install packages
+  apk add --no-cache \
     bash \
     screen \
     curl \
     nyx \
-    tor \
-    && rm -rf /var/cache/apk/*
+    tor &&\
+  # Clean up
+  rm -rf /var/cache/apk/*
 
-# Install obfs4proxy for Bridges
-COPY --from=chriswayg/tor-alpine:latest /usr/local/bin/obfs4proxy /usr/local/bin/obfs4proxy
 
-# Install gogost
-COPY --from=gogost/gost:latest /bin/gost /usr/local/bin/gost
+
+FROM base
+
+# To prevent conflict between user choice and the default port, we use a different port
+ENV TOR_SOCKS_PORT=59050 \
+  TOR_HTTP_TUNNEL_PORT=58118 \
+  TOR_TRANS_PORT=58119
 
 # Setup entrypoint
 COPY entrypoint.sh /entrypoint.sh
@@ -44,17 +65,15 @@ RUN addgroup -S torproxy \
 USER torproxy
 
 # Setup healthcheck
-HEALTHCHECK --interval=60s --timeout=3s --start-period=20s --retries=3 \
+HEALTHCHECK --interval=60s --timeout=5s --start-period=20s --retries=3 \
     CMD health | grep -q 'OK'
-
-EXPOSE 1080 8080
 
 VOLUME ["/etc/torrc.d"]
 
-CMD ["-L", "http://:8080", "-L", "socks5://:1080"]
+CMD ["-L", "http://:8080", "-L", "socks://:1080"]
 
 # Build
-#   docker build -t litehex/torproxy .
+#   docker buildx build -t litehex/torproxy .
 
 # Run
 #   docker run --rm -p 9090:8080 litehex/torproxy

@@ -4,7 +4,7 @@ TOR_CONFIG_DIR="${PG_CONFIG_DIR:-/etc/tor}"
 TOR_CONFIG="${TOR_CONFIG_DIR}/torrc"
 
 current_socks_port() {
-  grep "HTTPTunnelPort" "${TOR_CONFIG}" | awk '{print $2}'
+  grep -i "^SocksPort" "${TOR_CONFIG}" | awk '{print $2}'
 }
 
 current_socks_port
