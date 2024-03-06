@@ -9,8 +9,12 @@ on:
 
 ##
 # Invoke:
-#   gh workflow run "Build Prerelease Image" -f tag=2.0.0-canary.0
+#   gh workflow run build.yml -f tag=1.0.0-canary.0
 ##
+
+concurrency:
+  group: ${{ github.event.inputs.tag }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
