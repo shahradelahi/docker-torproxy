@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# This script is used for getting last 100 lines of a screen session
+
+SCREEN_NAME="$1"
+
+if [ -z "$SCREEN_NAME" ]; then
+    echo "Usage: $(basename $0) <screen_name>"
+    exit 1
+fi
+
+screen -S "$SCREEN_NAME" -X hardcopy /tmp/screen-hardcopy
+tail -n 100 /tmp/screen-hardcopy
+rm /tmp/screen-hardcopy
+
