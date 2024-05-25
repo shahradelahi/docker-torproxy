@@ -198,7 +198,7 @@ get_torrc_option() {
 setup_tor_dns() {
   local _TOR_DNS_PORT="$(get_torrc_option "DNSPort")"
   if [ -z "$_TOR_DNS_PORT" ]; then
-    log error "DNSPort is not set in ${TOR_CONFIG}"
+    log ERROR "DNSPort is not set in ${TOR_CONFIG}"
     exit 1
   fi
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 current_socks_port() {
-  grep -i "^SocksPort" "${TOR_CONFIG}" | awk '{print $2}'
+  get_torrc_option "SocksPort"
 }
 
 start_gost_server() {

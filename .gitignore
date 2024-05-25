@@ -1,2 +1,6 @@
 .idea
 .ignore
+node_modules
+.env
+.env.*
+!.env.example
