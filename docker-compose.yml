@@ -9,8 +9,8 @@ services:
       - "1080:1080"
       - "8080:8080"
       - "8338:8338"
-      - "5353:53/udp"
-      - "5353:53/tcp"
+    #  - "53:53/udp"
+    #  - "53:53/tcp"
     command:
       - -L="http://:8080"
       - -L="socks5://username:secure-password@:1080"

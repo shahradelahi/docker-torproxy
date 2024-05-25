@@ -159,7 +159,7 @@ $ docker exec -it torproxy nyx -i 9060
 ## Contributing
 
 Want to contribute? Awesome! To show your support is to star the project, or to raise issues
-on [GitHub](https://github.com/shahradelahi/docker-cfw-proxy).
+on [GitHub](https://github.com/shahradelahi/docker-torproxy).
 
 Thanks again for your support, it is much appreciated! 🙏
 
