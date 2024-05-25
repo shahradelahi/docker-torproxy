@@ -1,6 +1,6 @@
 {
   "name": "docker-torproxy",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --forece-recreate",
