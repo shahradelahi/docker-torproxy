@@ -12,7 +12,7 @@ RUN apk update \
   && apk upgrade \
   && rm -rf /var/cache/apk/*
 
-FROM golang:alpine AS pluggables
+FROM --platform=${BUILDPLATFORM} golang:alpine AS pluggables
 ARG LYREBIRD_VERSION
 ARG MEEK_VERSION
 ARG SNOWFLAKE_VERSION
