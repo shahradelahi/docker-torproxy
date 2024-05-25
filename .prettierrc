@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/prettierrc",
+  "useTabs": false,
+  "semi": true,
+  "printWidth": 100,
+  "overrides": [
+    {
+      "files": "*.md",
+      "options": {
+        "parser": "markdown",
+        "printWidth": 79
+      }
+    },
+    {
+      "files": "Dockerfile",
+      "options": {
+        "spaceRedirects": false
+      }
+    }
+  ],
+  "plugins": ["prettier-plugin-sh"]
+}
