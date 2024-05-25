@@ -81,7 +81,7 @@ environment variables.
 | `TOR_CONTROL_PASSWD` | Automatically will be hashed and used as password of control port. |
 | `TOR_*`              | For configuring the Tor config file.                               |
 
-> 💡 For more information about Tor config file see [Offical Tor Manual](hhttps://2019.www.torproject.org/docs/tor-manual.html.en).
+> 💡 For more information about Tor config file see [Offical Tor Manual](https://2019.www.torproject.org/docs/tor-manual.html.en).
 
 ## Usage
 
