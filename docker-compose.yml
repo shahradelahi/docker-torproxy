@@ -1,0 +1,21 @@
+services:
+  cfw-proxy:
+    image: ghcr.io/shahradelahi/torproxy
+    container_name: torproxy
+    restart: unless-stopped
+    volumes:
+      - persist-data:/var/lib/tor
+    ports:
+      - "1080:1080"
+      - "8080:8080"
+      - "8338:8338"
+    #  - "53:53/udp"
+    #  - "53:53/tcp"
+    command:
+      - -L="http://:8080"
+      - -L="socks5://username:secure-password@:1080"
+      - -L="ss://AES-256-CFB:secure-password@:8338"
+
+volumes:
+  persist-data:
+    driver: local

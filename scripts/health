@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-TOR_PORT="$(get-socks-port)"
+set -e
+
+source /etc/torproxy/internal/index.sh
+
+TOR_PORT="$(current_socks_port)"
 curl \
   -s \
   -x "socks5://127.0.0.1:${TOR_PORT}/" \

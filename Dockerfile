@@ -1,93 +1,98 @@
 ARG ALPINE_VERSION=3.19
 ARG GOST_VERSION=3.0.0-rc10
+ARG LYREBIRD_VERSION=0.2.0
+ARG MEEK_VERSION=0.38.0
+ARG SNOWFLAKE_VERSION=2.9.2
 
-ARG BUILDPLATFORM=linux/amd64
-
-
-FROM --platform=${BUILDPLATFORM} alpine:${ALPINE_VERSION} AS alpine
-FROM --platform=${BUILDPLATFORM} chriswayg/tor-alpine:latest AS tor
 FROM --platform=${BUILDPLATFORM} gogost/gost:${GOST_VERSION} AS gost
+FROM --platform=${BUILDPLATFORM} alpine:${ALPINE_VERSION} as alpine
+ENV TZ=UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ >/etc/timezone
+RUN apk update \
+  && apk upgrade \
+  && rm -rf /var/cache/apk/*
 
+FROM golang:alpine AS pluggables
+ARG LYREBIRD_VERSION
+ARG MEEK_VERSION
+ARG SNOWFLAKE_VERSION
+RUN apk update \
+  && apk upgrade \
+  && apk add -U --no-cache \
+    git \
+    bash \
+    make \
+  && rm -rf /var/cache/apk/*
+SHELL ["/bin/bash", "-c"]
+RUN <<EOT
+  set -ex
+  cd /tmp
+
+  # Lyrebird - https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird
+  wget "https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/-/archive/lyrebird-${LYREBIRD_VERSION}/lyrebird-lyrebird-${LYREBIRD_VERSION}.tar.gz"
+  tar -xvf lyrebird-lyrebird-${LYREBIRD_VERSION}.tar.gz
+  pushd lyrebird-lyrebird-${LYREBIRD_VERSION} || exit 1
+  make build -e VERSION=${LYREBIRD_VERSION}
+  cp ./lyrebird /usr/local/bin
+  popd || exit 1
+
+  # Meek - https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/meek
+  wget "https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/meek/-/archive/v${MEEK_VERSION}/meek-v${MEEK_VERSION}.tar.gz"
+  tar -xvf meek-v${MEEK_VERSION}.tar.gz
+  pushd meek-v0.38.0/meek-client || exit 1
+  make meek-client
+  cp ./meek-client /usr/local/bin
+  popd || exit 1
+
+  # Snowflake - https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake
+  wget "https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/-/archive/v${SNOWFLAKE_VERSION}/snowflake-v${SNOWFLAKE_VERSION}.tar.gz"
+  tar -xvf snowflake-v${SNOWFLAKE_VERSION}.tar.gz
+  pushd snowflake-v${SNOWFLAKE_VERSION}/client || exit 1
+  go get -v
+  go build -v -o /usr/local/bin/snowflake-client .
+  popd || exit 1
+
+  cp -rv /go/bin /usr/local/bin
+  rm -rf /go
+  rm -rf /tmp/*
+EOT
 
 FROM alpine AS base
-
-ENV TZ=UTC
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-# Install obfs4proxy for Bridges
-COPY --from=tor /usr/local/bin/obfs4proxy /usr/local/bin/obfs4proxy
-
-# Install gogost
-COPY --from=gost /bin/gost /usr/local/bin/gost
-
-# Update and upgrade packages
-RUN apk update &&\
-  apk upgrade &&\
-  # Install packages
-  apk add --no-cache \
-    bash \
-    screen \
-    curl \
-    nyx \
-    tor &&\
-  # Clean up
-  rm -rf /var/cache/apk/*
-
-
+RUN apk add -U --no-cache \
+  bash \
+  screen \
+  curl \
+  nyx \
+  tor \
+  logrotate \
+  dnsmasq \
+  && rm -rf /var/cache/apk/*
 
 FROM base
+ARG MEEK_VERSION
+ENV MEEK_VERSION=${MEEK_VERSION}
+COPY --from=pluggables /usr/local/bin/lyrebird /usr/local/bin/lyrebird
+COPY --from=pluggables /usr/local/bin/meek-client /usr/local/bin/meek-client
+COPY --from=pluggables /usr/local/bin/snowflake-client /usr/local/bin/snowflake-client
+COPY --from=gost /bin/gost /usr/local/bin/gost
 
-# To prevent conflict between user choice and the default port, we use a different port
-ENV TOR_SOCKS_PORT=59050 \
-  TOR_HTTP_TUNNEL_PORT=58118 \
-  TOR_TRANS_PORT=58119
+RUN mkdir -p /etc/tor/torrc.d /var/log/gogost
 
-# Setup entrypoint
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+RUN addgroup -S torproxy \
+  && adduser -S -G torproxy torproxy \
+  && mkdir -p /var/lib/tor \
+  && chown -R torproxy:torproxy /var/lib/tor /etc/tor
 
-# Init or Copy files
-RUN mkdir -p /etc/tor \
-    && mkdir -p /etc/torrc.d/ \
-    && mkdir -p /var/log/gogost
-
+COPY internal /etc/torproxy/internal
 COPY scripts/* /usr/local/bin/
-
-# Fix permissions
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && chown torproxy:torproxy /entrypoint.sh
 RUN chmod -R +x /usr/local/bin/
 
-# Setup user
-RUN addgroup -S torproxy \
-    && adduser -S -G torproxy torproxy \
-    && chown -R torproxy:torproxy /etc/tor /var/log/gogost /entrypoint.sh
+RUN echo '*  *  *  *  *    /usr/bin/env logrotate /etc/logrotate.d/rotator' >/etc/crontabs/root
 
-USER torproxy
-
-# Setup healthcheck
 HEALTHCHECK --interval=60s --timeout=5s --start-period=20s --retries=3 \
-    CMD health | grep -q 'OK'
-
-VOLUME ["/etc/torrc.d"]
-
-CMD ["-L", "http://:8080", "-L", "socks://:1080"]
-
-# Build
-#   docker buildx build -t litehex/torproxy .
-
-# Run
-#   docker run --rm -p 9090:8080 litehex/torproxy
-#   docker run --rm -p 9090:8080 -e TOR_SOCKS5_PROXY=host.docker.internal:8080 litehex/torproxy
-#   docker run --rm -p 9090:8080 -e TOR_USE_BRIDGE=1 -v "$(pwd)/config/bridges.conf:/etc/torrc.d/bridges.conf" litehex/torproxy
-
-# Test
-#   curl -x socks5://localhost:1080 https://ip.me
-#   curl -x http://localhost:8080 https://ip.me
-#   curl --proxy socks5://username:password@localhost:1080 https://ip.me
-
-# Run with volume
-#   docker volume create torproxy
-#   docker run --rm -v torproxy:/home/torproxy litehex/torproxy
-#   docker run --rm -v torproxy:/home/torproxy -e TOR_SOCKS5_PROXY=host.docker.internal:8080 litehex/torproxy
-#   docker run --rm -v torproxy:/home/torproxy -v "$(pwd)/config/torrc:/etc/tor/torrc" litehex/torproxy
-#   docker run --rm -v torproxy:/home/torproxy litehex/torproxy -L socks5://username:password@:1080
+  CMD health | grep -q 'OK'
+VOLUME ["/etc/torrc.d", "/var/lib/tor"]
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["-L", "socks://:1080", "-L", "http://:8080"]
