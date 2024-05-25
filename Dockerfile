@@ -69,6 +69,14 @@ RUN apk add -U --no-cache \
   && rm -rf /var/cache/apk/*
 
 FROM base
+LABEL maintainer="Shahrad Elahi <https://github.com/shahradelahi>"
+LABEL org.opencontainers.image.vendor="shahradelahi"
+LABEL org.opencontainers.image.title="TOR Proxy"
+LABEL org.opencontainers.image.description="A Docker image for connecting to TOR trough $(Socks5), $(HTTP) and $(Shadowsocks) proxy servers"
+LABEL org.opencontainers.image.source="https://github.com/shahradelahi/docker-torproxy"
+LABEL org.opencontainers.image.url="https://github.com/users/shahradelahi/packages/container/package/docker-torproxy"
+LABEL org.opencontainers.image.base.name="ghcr.io/shahradelahi/torproxy"
+
 ARG MEEK_VERSION
 ENV MEEK_VERSION=${MEEK_VERSION}
 COPY --from=pluggables /usr/local/bin/lyrebird /usr/local/bin/lyrebird
