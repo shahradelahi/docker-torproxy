@@ -44,7 +44,7 @@ RUN <<EOT
   cp ./meek-client /usr/local/bin
   popd || exit 1
 
-  # Snowflake
+  # Snowflake - https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake
   wget "https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/-/archive/v${SNOWFLAKE_VERSION}/snowflake-v${SNOWFLAKE_VERSION}.tar.gz"
   tar -xvf snowflake-v${SNOWFLAKE_VERSION}.tar.gz
   pushd snowflake-v${SNOWFLAKE_VERSION}/client || exit 1
@@ -64,6 +64,8 @@ RUN apk add -U --no-cache \
   curl \
   nyx \
   tor \
+  logrotate \
+  dnsmasq \
   && rm -rf /var/cache/apk/*
 
 FROM base
@@ -87,7 +89,10 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && chown torproxy:torproxy /entrypoint.sh
 RUN chmod -R +x /usr/local/bin/
 
+RUN echo '*  *  *  *  *    /usr/bin/env logrotate /etc/logrotate.d/rotator' >/etc/crontabs/root
+
 HEALTHCHECK --interval=60s --timeout=5s --start-period=20s --retries=3 \
   CMD health | grep -q 'OK'
 VOLUME ["/etc/torrc.d", "/var/lib/tor"]
 ENTRYPOINT ["/entrypoint.sh"]
+CMD ["-L", "socks://:1080", "-L", "http://:8080"]

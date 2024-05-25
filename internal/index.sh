@@ -1,6 +1,8 @@
 #!/bin/bash
 
+source /etc/torproxy/internal/screen.sh
 source /etc/torproxy/internal/tor.sh
+source /etc/torproxy/internal/dns.sh
 source /etc/torproxy/internal/gost.sh
 
 function uppercase() {
@@ -15,4 +17,19 @@ function to_camel_case() {
 function log() {
   # Feb 20 16:48:35 UTC [notice] message
   echo -e "$(date +"%b %d %H:%M:%S %Z") [$(uppercase "$1")] $2"
+}
+
+function setup_logrotate() {
+  tee "/etc/logrotate.d/rotator" &> /dev/null << EOF
+/var/log/dnsmasq/dnsmasq.log
+/var/log/gogost/*.log {
+  size 1M
+  rotate 3
+  missingok
+  notifempty
+  create 0640 root adm
+  copytruncate
+}
+EOF
+  crond
 }

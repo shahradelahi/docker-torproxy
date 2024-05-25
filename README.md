@@ -21,7 +21,7 @@
 ## Features
 
 - Support for diversity of proxy servers (`Socks5`, `HTTP`, `Shadowsocks` and more)
-- Preinstalled the popular `Lyrebird`, `Meek`, and `Snowflake` transports
+- Preinstalled the popular `Lyrebird`, `Meek`, and `Snowflake` pluggable transports
 - Default use of Tor DNS resolver
 - Multi-platform image
 
@@ -66,6 +66,7 @@ Image: shahradel/torproxy:latest
 
 This section depend on your configuration but for the most part, the default ports are:
 
+- `53`: Tor DNS
 - `1080`: `Socks5` proxy
 - `8080`: `HTTP` proxy
 
@@ -79,6 +80,8 @@ environment variables.
 | -------------------- | ------------------------------------------------------------------ |
 | `TOR_CONTROL_PASSWD` | Automatically will be hashed and used as password of control port. |
 | `TOR_*`              | For configuring the Tor config file.                               |
+
+> 💡 For more information about Tor config file see [Offical Tor Manual](hhttps://2019.www.torproject.org/docs/tor-manual.html.en).
 
 ## Usage
 

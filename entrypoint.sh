@@ -6,6 +6,7 @@ TOR_CONFIG_DIR="${TOR_CONFIG_DIR:-/etc/tor}"
 TOR_CONFIG="${TOR_CONFIG_DIR}/torrc"
 
 source /etc/torproxy/internal/index.sh
+setup_logrotate
 
 # If command starts with nyx, run nyx
 if [ "${1}" = 'nyx' ]; then
@@ -13,13 +14,16 @@ if [ "${1}" = 'nyx' ]; then
   exec nyx "$@"
 fi
 
+screen -wipe &> /dev/null || true
+
 if [ ! -f "${TOR_CONFIG}" ]; then
   generate_tor_config
 else
   log NOTICE "Using existing tor config file at ${TOR_CONFIG}"
 fi
+cleanse_tor_config
 load_tor_env
-setup_tor_dns
+setup_dns
 
 sleep 1
 echo -e "\n======================== Versions ========================"

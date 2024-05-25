@@ -22,7 +22,7 @@ ${TOR_SOCKS_POLICY:+SOCKSPolicy $TOR_SOCKS_POLICY}
 HTTPTunnelPort ${TOR_HTTP_TUNNEL_PORT:-58118}
 
 #DNSPort 53
-DNSPort ${TOR_DNS_PORT:-53}
+DNSPort ${TOR_DNS_PORT:-53530}
 
 #TransPort 9040
 TransPort ${TOR_TRANS_PORT:-58119}
@@ -138,7 +138,13 @@ ${TOR_BRIDGE_DISTRIBUTION:+BridgeDistribution $TOR_BRIDGE_DISTRIBUTION}
 
 ########## END AUTO-GENERATED FILE ##########
 EOF
+}
 
+CUSTOM_TOR_OPTIONS=(
+  "TOR_CONTROL_PASSWD"
+)
+
+cleanse_tor_config() {
   # Remove comment line with single Hash
   sed -i '/^#\([^#]\)/d' "${TOR_CONFIG}"
 
@@ -148,10 +154,6 @@ EOF
   # Remove double empty lines
   sed -i '/^$/N;/^\n$/D' "${TOR_CONFIG}"
 }
-
-CUSTOM_TOR_OPTIONS=(
-  "TOR_CONTROL_PASSWD"
-)
 
 # gets any environment variables that start with TOR_ and adds them to the config file
 load_tor_env() {
@@ -193,21 +195,4 @@ load_tor_env() {
 
 get_torrc_option() {
   grep -i "^$1" "$TOR_CONFIG" | awk '{print $2}'
-}
-
-setup_tor_dns() {
-  local _TOR_DNS_PORT="$(get_torrc_option "DNSPort")"
-  if [ -z "$_TOR_DNS_PORT" ]; then
-    log ERROR "DNSPort is not set in ${TOR_CONFIG}"
-    exit 1
-  fi
-
-  # Check if the dnsport conatins a hostname: x.x.x.x:PROT if it was just get the port
-  if echo "$_TOR_DNS_PORT" | grep -q ":"; then
-    _TOR_DNS_PORT="$(echo "$_TOR_DNS_PORT" | awk -F: '{print $2}')"
-  fi
-
-  log NOTICE "Setting up DNS server on port ${_TOR_DNS_PORT}"
-
-  echo "nameserver 127.0.0.1" > /etc/resolv.conf
 }
