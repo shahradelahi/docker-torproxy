@@ -1,75 +1,165 @@
-# TorProxy
+# Docker TorProxy
 
-A latest version of Tor for with tools for creating a proxy server.
+> A stable version of Tor for with tools for creating a proxy server.
+
+---
+
+- [Features](#features)
+- [Build locally](#build-locally)
+- [Image](#image)
+- [Environment variables](#environment-variables)
+- [Ports](#ports)
+- [Usage](#usage)
+  - [Docker Compose](#docker-compose)
+  - [Command line](#command-line)
+  - [Testing](#testing)
+- [Upgrade](#upgrade)
+- [Tor Control Port](#tor-control-port)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Features
+
+- Support for diversity of proxy servers (`Socks5`, `HTTP`, `Shadowsocks` and more)
+- Preinstalled the popular `Lyrebird`, `Meek`, and `Snowflake` transports
+- Default use of Tor DNS resolver
+- Multi-platform image
+
+## Build locally
+
+Build time can time up to 10 minutes, depending on your system.
+
+```shell
+git clone https://github.com/shahradelahi/docker-torproxy
+cd docker-torproxy
+
+# Build image and output to docker (default)
+docker buildx bake
+
+# Build multi-platform image
+docker buildx bake image-all
+```
+
+## Image
+
+| Registry                                                                                               | Image                           |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------- |
+| [Docker Hub](https://hub.docker.com/r/shahradel/torproxy/)                                             | `shahradel/torproxy`            |
+| [GitHub Container Registry](https://github.com/users/shahradelahi/packages/container/package/torproxy) | `ghcr.io/shahradelahi/torproxy` |
+
+Following platforms for this image are available:
+
+```
+$ docker run --rm mplatform/mquery shahradel/torproxy:latest
+Image: shahradel/torproxy:latest
+ * Manifest List: Yes
+ * Supported platforms:
+   - linux/amd64
+   - linux/arm/v6
+   - linux/arm/v7
+   - linux/arm64
+   - linux/386
+   - linux/s390x
+```
+
+## Ports
+
+This section depend on your configuration but for the most part, the default ports are:
+
+- `1080`: `Socks5` proxy
+- `8080`: `HTTP` proxy
+
+## Environment variables
+
+To configure the Tor config file you can mount the configs to `/etc/tor/torrc.d` directory or prefix the environment
+variables with `TOR_`. For example, if you can set SocksPort option you have to add `TOR_SOCKS_PORT=1080` to the
+environment variables.
+
+| Option               | Description                                                        |
+| -------------------- | ------------------------------------------------------------------ |
+| `TOR_CONTROL_PASSWD` | Automatically will be hashed and used as password of control port. |
+| `TOR_*`              | For configuring the Tor config file.                               |
 
 ## Usage
 
-By default, a `Socks5` and `HTTP` proxy server with no authentication will be created on port `1080` and `8080`
-respectively.
+### Docker Compose
+
+Docker compose is the recommended way to run this image. You can use the following
+[docker compose template](docker-compose.yml), then run the container:
 
 ```bash
-docker run --rm -p 1080:1080 -p 8080:8080 \
-  litehex/torproxy
+docker compose up -d
+docker compose logs -f
 ```
 
-Testing the proxy server.
+### Command line
+
+By default, the image is started with two password-less `socks5` and `http` proxies and image can be run by a minimal
+command:
+
+```bash
+$ docker run -d --name torproxy \
+  -p 1080:1080 -p 8080:8080 \
+  shahradel/torproxy
+```
+
+To configure the proxy servers you can add flags to the command:
+
+```bash
+$ docker run -d --name torproxy \
+  -p 1080:1080 -p 8080:8080 -p 8338:8338 \
+  shahradel/torproxy \
+  -L "http://:8080" \
+  -L "socks5://<username>:<password>@:1080" \
+  -L "ss://AES-256-CFB:<username>:<password>@:8338"
+```
+
+### Testing
 
 ```bash
 # Socks5
-curl -x socks5://localhost:1080 https://www.cloudflare.com/cdn-cgi/trace/
+curl -x socks5://localhost:1080 https://check.torproject.org/api/ip
 
 # HTTP
 curl -x http://localhost:8080 https://check.torproject.org/api/ip
 ```
 
-## Examples
+## Upgrade
 
-##### Create a Socks5 proxy server with authentication
-
-```bash
-docker run --rm \
-  -p 1080:1080 \
-  litehex/torproxy -L "socks5://<username>:<password>@:1080"
-```
-
-##### Configure Tor to use exit nodes in specified countries
+Recreate the container whenever I push an update:
 
 ```bash
-docker run --rm \
-  -p 1080:1080 \
-  -e TOR_EXIT_NODES="{us},{ca},{gb}" \
-  -e TOR_STRICT_NODES="1" \
-  litehex/torproxy
+docker compose pull
+docker compose up -d
 ```
 
-##### Accessing the Tor control port
+## Tor Control Port
 
 By default, the control port is not exposed and for security reasons, it can be enabled by setting
 the `TOR_CONTROL_PORT` and `TOR_HASHED_CONTROL_PASSWORD` environment variables.
 
-The container provides a feature for automatically generating a hashed password for the control port, by setting
-the `TOR_CONTROL_PASSWD` environment variable.
-
 ```bash
-docker run --rm --name torproxy \
+$ docker run -d --name torproxy \
   -p 9060:9060 \
   -e TOR_CONTROL_PORT=9060 \
   -e TOR_CONTROL_PASSWD="super-secure-password" \
-  litehex/torproxy
+  shahradel/torproxy
 ```
 
 Now tor control port is available on port `9060` and you can use tools such as [nyx](https://nyx.torproject.org/) to
 monitor the tor instance.
 
 ```bash
-docker exec -it torproxy nyx -i 9060
+$ docker exec -it torproxy nyx -i 9060
 ```
 
-## Reporting
+## Contributing
 
-If you have any questions, bug reports, and feature requests, please create an issue
-on [GitHub](https://github.com/shahradelahi/docker-torproxy/issues).
+Want to contribute? Awesome! To show your support is to star the project, or to raise issues
+on [GitHub](https://github.com/shahradelahi/docker-cfw-proxy).
 
-### License
+Thanks again for your support, it is much appreciated! 🙏
 
-This project is licensed under the GPLv3 License - see the [LICENSE](LICENSE) file for details
+## License
+
+[GPL-3.0](/LICENSE) © [Shahrad Elahi](https://github.com/shahradelahi)
