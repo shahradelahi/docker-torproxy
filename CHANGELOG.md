@@ -1,5 +1,11 @@
 # docker-torproxy
 
+## 1.0.1
+
+### Patch Changes
+
+- f1ebb03: fix: file permissions and default tor user
+
 ## 1.0.0
 
 ### Major Changes
