@@ -21,7 +21,6 @@ if [ ! -f "${TOR_CONFIG}" ]; then
 else
   log NOTICE "Using existing tor config file at ${TOR_CONFIG}"
 fi
-cleanse_tor_config
 load_tor_env
 setup_dns
 

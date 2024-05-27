@@ -36,8 +36,10 @@ ${TOR_LOG_LEVEL:+Log $TOR_LOG_LEVEL}
 #RunAsDaemon 1
 ${TOR_RUN_AS_DAEMON:+RunAsDaemon $TOR_RUN_AS_DAEMON}
 
+User tor
+
 #DataDirectory @LOCALSTATEDIR@/lib/tor
-${TOR_DATA_DIRECTORY:+DataDirectory $TOR_DATA_DIRECTORY}
+DataDirectory ${TOR_DATA_DIRECTORY:-/var/lib/tor}
 
 #ControlPort 9051
 ${TOR_CONTROL_PORT:+ControlPort $TOR_CONTROL_PORT}
@@ -56,9 +58,6 @@ ClientTransportPlugin snowflake exec /usr/local/bin/snowflake-client
 ${TOR_SOCKS5_PROXY:+Socks5Proxy $TOR_SOCKS5_PROXY}
 ${TOR_SOCKS5_USERNAME:+Socks5Username $TOR_SOCKS5_USERNAME}
 ${TOR_SOCKS5_PASSWORD:+Socks5Password $TOR_SOCKS5_PASSWORD}
-
-User torproxy
-DataDirectory /var/lib/tor
 
 ######### Location-hidden Services ##########
 
@@ -151,8 +150,16 @@ cleanse_tor_config() {
   # Remove options with no value. (KEY[:space:]{...VALUE})
   sed -i '/^[^ ]* $/d' "${TOR_CONFIG}"
 
+  # Remove duplicate lines
+  sed -i '/^$/N;/\n.*\n/d' "${TOR_CONFIG}"
+
   # Remove double empty lines
   sed -i '/^$/N;/^\n$/D' "${TOR_CONFIG}"
+}
+
+fix_tor_permissions() {
+  chown -R 101:101 /var/lib/tor
+  chmod +x /var/lib/tor
 }
 
 # gets any environment variables that start with TOR_ and adds them to the config file
@@ -191,6 +198,9 @@ load_tor_env() {
     echo ""
     log NOTICE "Added ${added_count} and updated ${updated_count} options from environment variables."
   fi
+
+  cleanse_tor_config
+  fix_tor_permissions
 }
 
 get_torrc_option() {

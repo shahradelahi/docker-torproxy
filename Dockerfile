@@ -84,17 +84,13 @@ COPY --from=pluggables /usr/local/bin/meek-client /usr/local/bin/meek-client
 COPY --from=pluggables /usr/local/bin/snowflake-client /usr/local/bin/snowflake-client
 COPY --from=gost /bin/gost /usr/local/bin/gost
 
-RUN mkdir -p /etc/tor/torrc.d /var/log/gogost
-
-RUN addgroup -S torproxy \
-  && adduser -S -G torproxy torproxy \
-  && mkdir -p /var/lib/tor \
-  && chown -R torproxy:torproxy /var/lib/tor /etc/tor
+RUN mkdir -p /etc/tor/torrc.d /var/log/gogost /var/lib/tor /etc/tor \
+  && chown -R 101:101 /var/lib/tor
 
 COPY internal /etc/torproxy/internal
 COPY scripts/* /usr/local/bin/
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && chown torproxy:torproxy /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 RUN chmod -R +x /usr/local/bin/
 
 RUN echo '*  *  *  *  *    /usr/bin/env logrotate /etc/logrotate.d/rotator' >/etc/crontabs/root
