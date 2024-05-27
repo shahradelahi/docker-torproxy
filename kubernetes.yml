@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: torproxy
+  labels:
+    app: torproxy
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: torproxy
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: torproxy
+        name: torproxy
+    spec:
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+        - name: obfs4-bridges
+          secret:
+            secretName: obfs4-bridges
+        - name: tor-data
+          persistentVolumeClaim:
+            claimName: tor-data
+      containers:
+        - name: torproxy
+          image: shahradel/torproxy:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 100m
+              ephemeral-storage: 500M
+              memory: 200M
+            requests:
+              cpu: 100m
+              ephemeral-storage: 500M
+              memory: 200M
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - name: obfs4-bridges
+              mountPath: /etc/tor/torrc.d/
+            - name: tor-data
+              mountPath: /var/lib/tor/
+          # Configure the Proxy servers with below properties
+          env:
+            - name: PROXY_USERNAME
+              value: awesome-username
+            - name: PROXY_PASSWORD
+              value: super-secure-password
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: http-8080
+            - containerPort: 1080
+              protocol: TCP
+              name: socks-1080
+            - containerPort: 8338
+              protocol: TCP
+              name: ss-8338
+          command:
+            - -L=socks5://${PROXY_USERNAME}:${PROXY_PASSWORD}@:1080
+            - -L=http://${PROXY_USERNAME}:${PROXY_PASSWORD}@:8080
+            - -L=ss://AES-256-CFB:${PROXY_PASSWORD}@:8338
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: torproxy
+  name: torproxy
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http-8080
+      protocol: TCP
+      targetPort: 8080
+      port: 8080
+    - name: socks-1080
+      protocol: TCP
+      targetPort: 1080
+      port: 1080
+    - name: ss-8338
+      protocol: TCP
+      targetPort: 8338
+      port: 8338
+  selector:
+    app: torproxy
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tor-data
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1G
+
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: obfs4-bridges
+stringData:
+  bridge.conf: |
+    Bridge obfs4 212.227.193.159:8082 94F987600D8539445A78908035A331608C88D0E2 cert=JopFFuvSS2cewOdvb2emOQdfMYNgjVXS6LoVc47VjMWaBRz7xCHGiHqRo5EOzcXZJd2+Cg iat-mode=0
+    Bridge obfs4 217.182.78.247:52123 BBB647FCF920EEB00325E7AFB5C6E05855426852 cert=B4/Zigc/9+HsX6MP0bBY6nDFFQJSxMpMlYsvk7at+UF5btB5WVYj3qgswf8zUA6A98JnWQ iat-mode=0
+    Bridge obfs4 185.177.207.205:11205 084113B9A27A8087C26236EF67A16784DF58D7F0 cert=pzuLxMv5n+7nRqX2czUQGh8JZBCMEVUHlkciocGRpX2IsPlTqd1YyXFQxRwfsYEFuuBdBQ iat-mode=2
+    Bridge obfs4 51.75.74.245:8356 18C27C9850967FD4BF4188963C1AEBEC40807823 cert=y6cQEx4d/25KALeqJA+2uB+6rmzoD9KZ0FrQGNwxb10yVj3mDjHtOneqcqhRT+BADhCTYg iat-mode=0
+    Bridge obfs4 91.134.100.128:51106 ABB9F62BEC331EE5DE7B3C3BEA014F8910E0C6BD cert=bC5k/PWVu06cSPhSm6mrQDBevReEpdtpokmDibpK0MBxRaVnn0S3O6YvEi4BDUeasn71bA iat-mode=0
+    Bridge obfs4 51.83.252.216:45918 C2B7E51665111C9BE43894E90B9A65DD8A25490D cert=oQgHCdMhvfF44gwHJssSHXltUE4r8gddEQeZ4iy17XHZMP+ql2QTG9LziiEqNfNCqFDBSw iat-mode=0
+    Bridge obfs4 192.168.2.150:42222 3F41ADE40DB21BFEF5A5A1E3143DBBBC2F4841C6 cert=FbbsWd6s2o6QTNZ6fxNMkrd/03Smd6pFeW6UsIDjhtRjhR1eg9F0+6RKWmJtr1FgEEz5EQ iat-mode=0
+    Bridge obfs4 130.255.76.46:9098 9B72F502756CDDD28966931B2C1296259DD57780 cert=xNYGvoaiALC4RCCDmkZfYApBHXK+IUBWfqc62QgPVrJo7qer3YUAv1tSYl1ozHEdId4Kfw iat-mode=0
+    Bridge obfs4 141.94.65.145:14171 73B283F37163152D9AFF6606B3EEEF8CB0539B36 cert=wgt235lQJi7azLQAnRPra3IQdKbLS4E1AL2eb+ZP9mMRvLjuCfaOmOp2FT3Cb1M+5I15YA iat-mode=0
+    Bridge obfs4 51.91.208.71:18580 8C83B132A5A69207A76CF6154C58CB46145E5C9E cert=VhKc5m50cF00QCPZGzArQY4Z7pNSn8WcirNmX8XeVq4xh0BNhfMx+k4qWaJMnUKOmEdcWA iat-mode=0
+    Bridge obfs4 94.209.98.133:36912 AC77472297C4040CCDD8F9E191D9A39F2ED53499 cert=DVsoSQNdfIg8FmYpjdaNC2pw5t3E+9XsHxSQOOMimEtn2sYImiWjUCsNdQLrCe5cmcfFUg iat-mode=0
+    Bridge obfs4 103.29.64.211:443 1B8DA674BCB03A89B0054DBFEDBDE7EBB7F543AB cert=vJ8Gb7BuIKTxAFy8XaAw7WCiYaXgv3OZ6G1m2OJ7H85+eTpj0IQTsR89eym7DfoYAYAaXQ iat-mode=0
+    Bridge obfs4 57.128.57.241:55727 9968AAE01F299A14EFD3B462AABB79253DD35A4B cert=pP9k93e4/IpakyXXe9sYH53m1gcP9MS78pShP4gqkIOZ5NDMhD+Sk789bkUkepf+gxXDag iat-mode=0
+    Bridge obfs4 128.140.85.53:13229 5C233EF71C1843BDB4E89B3A39E870EF2E743EBF cert=HoG7kD0QxgY/zUFkKL2ggVY8hS3uy8ZFIUEWoRs7n0QQ2gH3xV2MeLwfNN8GjAebZeK1BA iat-mode=0
