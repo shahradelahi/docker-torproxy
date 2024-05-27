@@ -11,6 +11,7 @@
 - [Ports](#ports)
 - [Usage](#usage)
   - [Docker Compose](#docker-compose)
+  - [Kubernetes](#kubernetes)
   - [Command line](#command-line)
   - [Testing](#testing)
 - [Upgrade](#upgrade)
@@ -20,7 +21,7 @@
 
 ## Features
 
-- Support for diversity of proxy servers (`Socks5`, `HTTP`, `Shadowsocks` and more)
+- Support for a variety of proxy servers (`Socks5`, `HTTP`, `Shadowsocks` and more)
 - Preinstalled the popular `Lyrebird`, `Meek`, and `Snowflake` pluggable transports
 - Default use of Tor DNS resolver
 - Multi-platform image
@@ -93,6 +94,14 @@ Docker compose is the recommended way to run this image. You can use the followi
 ```bash
 docker compose up -d
 docker compose logs -f
+```
+
+### Kubernetes
+
+To install on a Kubernetes cluster, you can use the following [kubernetes deployment template](kubernetes.yml), then create the deployment:
+
+```bash
+kubectl apply -f kubernetes.yml
 ```
 
 ### Command line
