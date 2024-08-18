@@ -48,6 +48,6 @@ server=::1#${_TOR_DNS_PORT}
 log-facility=/var/log/dnsmasq/dnsmasq.log
 EOF
   mkdir -p /var/log/dnsmasq
-  chown -R dnsmasq:dnsmasq /var/log/dnsmasq
+  uown dnsmasq /var/log/dnsmasq
   dnsmasq
 }

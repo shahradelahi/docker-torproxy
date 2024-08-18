@@ -212,3 +212,7 @@ load_tor_env() {
 get_torrc_option() {
   grep -i "^$1" "$TOR_CONFIG" | awk '{print $2}'
 }
+
+current_socks_port() {
+  get_torrc_option "SocksPort"
+}

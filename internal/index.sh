@@ -3,7 +3,6 @@
 source /etc/torproxy/internal/screen.sh
 source /etc/torproxy/internal/tor.sh
 source /etc/torproxy/internal/dns.sh
-source /etc/torproxy/internal/gost.sh
 
 function uppercase() {
   echo "$1" | tr '[:lower:]' '[:upper:]'
