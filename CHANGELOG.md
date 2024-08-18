@@ -1,5 +1,11 @@
 # docker-torproxy
 
+## 1.0.2
+
+### Patch Changes
+
+- 0011868: Fixed a few minor issues and updated dependencies
+
 ## 1.0.1
 
 ### Patch Changes
