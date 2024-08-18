@@ -1,9 +1,11 @@
 #!/bin/bash
 
+TOR_CONFIG_DIR="${TOR_CONFIG_DIR:-/etc/tor}"
+TOR_CONFIG="${TOR_CONFIG_DIR}/torrc"
+
 generate_tor_config() {
   tee "$TOR_CONFIG" &> /dev/null << EOF
 ####### AUTO-GENERATED FILE, DO NOT EDIT #######
-
 
 VirtualAddrNetwork ${TOR_VIRTUAL_ADDR_NETWORK:-10.192.0.0/10}
 #AutomapHostsOnResolve 1
@@ -158,8 +160,12 @@ cleanse_tor_config() {
 }
 
 fix_tor_permissions() {
-  chown -R 101:101 /var/lib/tor
-  chmod +x /var/lib/tor
+  local DATA_DIR="${TOR_DATA_DIR:-/var/lib/tor}"
+  if [ ! -d "$DATA_DIR" ]; then
+    mkdir -p "$DATA_DIR"
+  fi
+  uown tor "$DATA_DIR"
+  chmod 700 "$DATA_DIR"
 }
 
 # gets any environment variables that start with TOR_ and adds them to the config file

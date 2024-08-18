@@ -3,9 +3,9 @@
   "version": "1.0.1",
   "private": true,
   "scripts": {
-    "dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --forece-recreate",
+    "dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --force-recreate",
     "build": "docker buildx build -t ghcr.io/shahradelahi/torproxy .",
-    "start": "docker compose -f docker-compose.yml up --forece-recreate",
+    "start": "docker compose -f docker-compose.yml up --force-recreate",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "ci:publish": "pnpm build && changeset publish"
