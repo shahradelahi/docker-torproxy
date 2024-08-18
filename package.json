@@ -20,10 +20,10 @@
   ],
   "author": "Shahrad Elahi <shahrad@litehex.com> (https://github.com/shahradelahi)",
   "license": "GPL-3.0",
-  "packageManager": "pnpm@8.15.7",
+  "packageManager": "pnpm@9.7.0",
   "dependencies": {
-    "@changesets/cli": "^2.27.1",
-    "prettier": "^3.2.5",
+    "@changesets/cli": "^2.27.7",
+    "prettier": "^3.3.3",
     "prettier-plugin-sh": "^0.14.0"
   }
 }
