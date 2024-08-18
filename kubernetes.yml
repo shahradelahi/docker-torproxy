@@ -63,10 +63,10 @@ spec:
             - containerPort: 8338
               protocol: TCP
               name: ss-8338
-          command:
+          args:
             - -L=socks5://${PROXY_USERNAME}:${PROXY_PASSWORD}@:1080
             - -L=http://${PROXY_USERNAME}:${PROXY_PASSWORD}@:8080
-            - -L=ss://AES-256-CFB:${PROXY_PASSWORD}@:8338
+            - -L=ss://aes-256-cfb:${PROXY_PASSWORD}@:8338
 
 ---
 apiVersion: v1

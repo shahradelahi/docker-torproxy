@@ -14,7 +14,7 @@ services:
     command:
       - -L="http://:8080"
       - -L="socks5://username:secure-password@:1080"
-      - -L="ss://AES-256-CFB:secure-password@:8338"
+      - -L="ss://aes-256-cfb:secure-password@:8338"
 
 volumes:
   persist-data:

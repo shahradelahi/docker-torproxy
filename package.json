@@ -3,9 +3,9 @@
   "version": "1.0.1",
   "private": true,
   "scripts": {
-    "dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --forece-recreate",
+    "dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --force-recreate",
     "build": "docker buildx build -t ghcr.io/shahradelahi/torproxy .",
-    "start": "docker compose -f docker-compose.yml up --forece-recreate",
+    "start": "docker compose -f docker-compose.yml up --force-recreate",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "ci:publish": "pnpm build && changeset publish"
@@ -20,10 +20,10 @@
   ],
   "author": "Shahrad Elahi <shahrad@litehex.com> (https://github.com/shahradelahi)",
   "license": "GPL-3.0",
-  "packageManager": "pnpm@8.15.7",
+  "packageManager": "pnpm@9.7.0",
   "dependencies": {
-    "@changesets/cli": "^2.27.1",
-    "prettier": "^3.2.5",
+    "@changesets/cli": "^2.27.7",
+    "prettier": "^3.3.3",
     "prettier-plugin-sh": "^0.14.0"
   }
 }

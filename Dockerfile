@@ -1,11 +1,11 @@
 ARG ALPINE_VERSION=3.19
 ARG GOST_VERSION=3.0.0-rc10
-ARG LYREBIRD_VERSION=0.2.0
+ARG LYREBIRD_VERSION=0.3.0
 ARG MEEK_VERSION=0.38.0
 ARG SNOWFLAKE_VERSION=2.9.2
 
 FROM --platform=${BUILDPLATFORM} gogost/gost:${GOST_VERSION} AS gost
-FROM --platform=${BUILDPLATFORM} alpine:${ALPINE_VERSION} as alpine
+FROM --platform=${BUILDPLATFORM} alpine:${ALPINE_VERSION} AS alpine
 ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ >/etc/timezone
 RUN apk update \
@@ -84,8 +84,7 @@ COPY --from=pluggables /usr/local/bin/meek-client /usr/local/bin/meek-client
 COPY --from=pluggables /usr/local/bin/snowflake-client /usr/local/bin/snowflake-client
 COPY --from=gost /bin/gost /usr/local/bin/gost
 
-RUN mkdir -p /etc/tor/torrc.d /var/log/gogost /var/lib/tor /etc/tor \
-  && chown -R 101:101 /var/lib/tor
+RUN mkdir -p /etc/tor/torrc.d /var/log/gogost /etc/tor
 
 COPY internal /etc/torproxy/internal
 COPY scripts/* /usr/local/bin/

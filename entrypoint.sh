@@ -2,9 +2,6 @@
 
 set -e
 
-TOR_CONFIG_DIR="${TOR_CONFIG_DIR:-/etc/tor}"
-TOR_CONFIG="${TOR_CONFIG_DIR}/torrc"
-
 source /etc/torproxy/internal/index.sh
 setup_logrotate
 
@@ -16,10 +13,10 @@ fi
 
 screen -wipe &> /dev/null || true
 
-if [ ! -f "${TOR_CONFIG}" ]; then
+if [ ! -f "$TOR_CONFIG" ]; then
   generate_tor_config
 else
-  log NOTICE "Using existing tor config file at ${TOR_CONFIG}"
+  log NOTICE "Using existing tor config file at $TOR_CONFIG"
 fi
 load_tor_env
 setup_dns
@@ -35,8 +32,7 @@ echo -e "Gost: \c" && gost -V | cut -d' ' -f2
 echo -e "Nyx: \c" && nyx --version | head -n 1 | awk '{print $3}'
 echo -e "\n======================= Tor Config ======================="
 grep -v "^#" "$TOR_CONFIG" | grep -v "^$"
-echo -e "============================================================\n"
+echo -e "==========================================================\n"
 sleep 1
 
-start_gost_server "$@"
-exec tor -f "$TOR_CONFIG"
+exec bash -c "(trap 'kill 0' SIGINT EXIT; (tor -f $TOR_CONFIG) & (gost -F=socks5://127.0.0.1:$(current_socks_port) $*) &> /var/log/gogost/gogost.log)"
