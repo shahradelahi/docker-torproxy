@@ -47,7 +47,7 @@ DataDirectory ${TOR_DATA_DIRECTORY:-/var/lib/tor}
 ${TOR_CONTROL_PORT:+ControlPort $TOR_CONTROL_PORT}
 #HashedControlPassword 16:872860B76453A77D60CA2BB8C1A7042072093276A3D701AD684053EC4C
 ${TOR_HASHED_CONTROL_PASSWORD:+HashedControlPassword $TOR_HASHED_CONTROL_PASSWORD}
-${TOR_CONTROL_PASSWD:+HashedControlPassword $(tor --hash-password "$TOR_CONTROL_PASSWD")}
+${TOR_CONTROL_PASSWD:+HashedControlPassword $(tor --hash-password "$TOR_CONTROL_PASSWD" | grep '^16:')}
 #CookieAuthentication 1
 ${TOR_COOKIE_AUTHENTICATION:+CookieAuthentication $TOR_COOKIE_AUTHENTICATION}
 
