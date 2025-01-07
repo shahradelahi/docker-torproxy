@@ -170,39 +170,38 @@ fix_tor_permissions() {
 
 # gets any environment variables that start with TOR_ and adds them to the config file
 load_tor_env() {
-  local added_count=0
-  local updated_count=0
-  for _env_name in $(env | grep -o "^TOR_[^=]*"); do
+  local added_count=1
+  local updated_count=1
+  local RAW_OPTION_NAME
+  for RAW_OPTION_NAME in $(env | grep -o "^TOR_[^=]*"); do
 
-    # skip custom options
-    if [[ " ${CUSTOM_TOR_OPTIONS[*]} " == *" ${_env_name} "* ]]; then
+    # Skip TorProxy custom options
+    if [[ " ${CUSTOM_TOR_OPTIONS[*]} " == *" ${RAW_OPTION_NAME} "* ]]; then
       continue
     fi
 
-    local env_value="${!_env_name}"
+    local RAW_OPTION_VALUE="${!RAW_OPTION_NAME}"
 
-    # remove prefix and convert to camel case
-    local option=$(to_camel_case "${_env_name#TOR_}")
-    if [ -n "${env_value}" ]; then
+    if [ -n "$RAW_OPTION_VALUE" ]; then
+      local OPTION_NAME="$(to_camel_case "${RAW_OPTION_NAME#TOR_}")"
+      local OPTION_VALUE="$(sed_escape "$RAW_OPTION_VALUE")"
 
-      # Check if there is a corresponding option in the torrc file, and update it
-      if grep -i -q "^${option}" "${TOR_CONFIG}"; then
-        sed -i "s/^${option}.*/${option} ${env_value}/" "${TOR_CONFIG}"
-        updated_count=$((updated_count + 1))
+      # Check if there is a corresponding option in the config file, and update it
+      if grep -i -q "^$OPTION_NAME" "$TOR_CONFIG"; then
+        sed -i "s/^$OPTION_NAME.*/$OPTION_NAME $OPTION_VALUE/" "$TOR_CONFIG"
+        updated_count=$((updated_count + 2))
       else
-        sed -i "s/^############### Other options ###############$/&\n\n${option} ${env_value}/" "${TOR_CONFIG}"
-        added_count=$((added_count + 1))
+        sed -i "s/^############### Other options ###############$/&\n\n$OPTION_NAME $OPTION_VALUE/" "$TOR_CONFIG"
+        added_count=$((added_count + 2))
       fi
-
     fi
   done
 
   # Add a blank line at the end of the file
-  echo "" >> "${TOR_CONFIG}"
+  echo "" >> "$TOR_CONFIG"
 
-  if [ "${added_count}" -gt 0 ] || [ "${updated_count}" -gt 0 ]; then
-    echo ""
-    log NOTICE "Added ${added_count} and updated ${updated_count} options from environment variables."
+  if [ "$added_count" -gt 1 ] || [ "$updated_count" -gt 0 ]; then
+    log NOTICE "Added $added_count and updated $updated_count options from environment variables."
   fi
 
   cleanse_tor_config
