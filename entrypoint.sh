@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 set -e
+[ -n "$DEBUG" ] && set -x
 
 source /etc/torproxy/internal/index.sh
 setup_logrotate
 
-# If command starts with nyx, run nyx
 if [ "${1}" = 'nyx' ]; then
   shift
   exec nyx "$@"
