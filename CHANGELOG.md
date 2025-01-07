@@ -1,5 +1,12 @@
 # docker-torproxy
 
+## 1.0.3
+
+### Patch Changes
+
+- 55ecd32: fix: hashing control port password
+- c243b19: fix: escape environment variables in sed command
+
 ## 1.0.2
 
 ### Patch Changes
