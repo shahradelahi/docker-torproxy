@@ -13,10 +13,10 @@ importers:
         version: 2.27.11
       prettier:
         specifier: ^3.4.2
-        version: 3.4.2
+        version: 3.9.6
       prettier-plugin-sh:
         specifier: ^0.14.0
-        version: 0.14.0(prettier@3.4.2)
+        version: 0.14.0(prettier@3.9.6)
 
 packages:
 
@@ -254,6 +254,7 @@ packages:
 
   mvdan-sh@0.10.1:
     resolution: {integrity: sha512-kMbrH0EObaKmK3nVRKUIIya1dpASHIEusM13S4V1ViHFuxuNxCo+arxoa6j/dbV22YBGjl7UKJm9QQKJ2Crzhg==}
+    deprecated: See https://github.com/mvdan/sh/issues/1145
 
   os-tmpdir@1.0.2:
     resolution: {integrity: sha512-D2FR03Vir7FIu45XBY20mTb+/ZSWB00sjU9jdQXt83gDrI4Ztz5Fs7/yy74g2N5SVQY4xY1qDr4rNddwYRVX0g==}
@@ -319,8 +320,8 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
 
-  prettier@3.4.2:
-    resolution: {integrity: sha512-e9MewbtFo+Fevyuxn/4rrcDAaq0IYxPGLvObpQjiZBMAzB9IGmzlnG9RZy3FFas+eBMu2vA0CszMeduow5dIuQ==}
+  prettier@3.9.6:
+    resolution: {integrity: sha512-OpN0zzVdiaiAhxpuuj5efpIS4sY9j7bY6uR5mnj5yPzGkdkjNKSJeUThPb60Jw29QuAZgA4o+/iB49kFiaBX6g==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -770,15 +771,15 @@ snapshots:
 
   pify@4.0.1: {}
 
-  prettier-plugin-sh@0.14.0(prettier@3.4.2):
+  prettier-plugin-sh@0.14.0(prettier@3.9.6):
     dependencies:
       mvdan-sh: 0.10.1
-      prettier: 3.4.2
+      prettier: 3.9.6
       sh-syntax: 0.4.2
 
   prettier@2.8.8: {}
 
-  prettier@3.4.2: {}
+  prettier@3.9.6: {}
 
   queue-microtask@1.2.3: {}
 
